@@ -13,8 +13,6 @@ body {
   margin:0;
 }
 
-h1 { margin:10px; }
-
 .panel {
   background:#111;
   padding:10px;
@@ -39,18 +37,10 @@ h1 { margin:10px; }
   cursor:pointer;
   font-size:12px;
   transition:0.3s;
-  transform:scale(1);
 }
 
-.card:active {
-  transform:scale(0.9);
-}
-
-.matched {
-  background:green;
-  transform:scale(1.05);
-}
-
+.card:active { transform:scale(0.9); }
+.matched { background:green; }
 </style>
 
 </head>
@@ -60,15 +50,16 @@ h1 { margin:10px; }
 <h1>🧠 Genius Game</h1>
 
 <div class="panel">
-  <input id="nameInput" placeholder="Enter name">
-  <button onclick="startGame()">Start</button>
+<input id="nameInput" placeholder="Enter name">
+<button onclick="joinGame()">Start</button>
 </div>
 
 <div class="panel">
-  <p id="player"></p>
-  <p>Level: <span id="level">1</span></p>
-  <p>Score: <span id="score">0</span></p>
-  <p>Time: <span id="timer">20</span></p>
+<p id="player"></p>
+<p>Level: <span id="level">1</span></p>
+<p>Score: <span id="score">0</span></p>
+<p>Coins: <span id="coins">0</span></p>
+<p>Time: <span id="timer">20</span></p>
 </div>
 
 <div class="grid" id="grid"></div>
@@ -81,157 +72,225 @@ h1 { margin:10px; }
 
 <script>
 
-// FIREBASE CONFIG
+// FIREBASE
 var firebaseConfig = {
-  apiKey: "AIzaSyD7Yt4xJWstWZqZQrK89G3JQZjIgk9dNV8",
+  apiKey: "AIzaSy...",
   authDomain: "marne-genius-game.firebaseapp.com",
   databaseURL: "https://marne-genius-game-default-rtdb.firebaseio.com",
   projectId: "marne-genius-game",
-  storageBucket: "marne-genius-game.firebasestorage.app",
-  messagingSenderId: "431179715064",
-  appId: "1:431179715064:web:f66a3db47ee02c9fb4c60d"
 };
-
 firebase.initializeApp(firebaseConfig);
 let db = firebase.database();
 
-let playerName = "";
-let score = 0;
-let level = 1;
-let opened = [];
-let matchCount = 0;
-let timer = 20;
+// GAME VARIABLES
+let playerName="";
+let score=0;
+let coins=0;
+let level=1;
+let opened=[];
+let matchCount=0;
+let timer=20;
 let interval;
+let roomId="room1";
 
-function startGame(){
+// JOIN GAME
+function joinGame(){
   playerName = document.getElementById("nameInput").value || "Player";
+
   document.getElementById("player").innerText = "Player: " + playerName;
-  score = 0;
-  level = 1;
+
+  db.ref("rooms/"+roomId+"/players/"+playerName).set({
+    name:playerName,
+    score:0
+  });
+
+  startGame();
+}
+
+// START GAME
+function startGame(){
+  score=0;
+  coins=0;
+  level=1;
   nextLevel();
 }
 
+// LEVEL SYSTEM
+function getData(level){
+
+if(level<5){
+return [
+["Gravity?","Newton"],
+["Mona Lisa?","Da Vinci"],
+["AC Power?","Tesla"],
+["Relativity?","Einstein"]
+];
+}
+
+if(level<10){
+return [
+["Apple founder?","Jobs"],
+["Facebook founder?","Zuckerberg"],
+["Microsoft founder?","Gates"],
+["Tesla CEO?","Musk"]
+];
+}
+
+if(level<20){
+return [
+["2+2","4"],
+["5x5","25"],
+["10/2","5"],
+["9+1","10"]
+];
+}
+
+return [
+["Brain","Mind"],
+["Focus","Win"],
+["Memory","Power"],
+["Think","Smart"]
+];
+
+}
+
+// NEXT LEVEL
 function nextLevel(){
-  document.getElementById("level").innerText = level;
-  document.getElementById("score").innerText = score;
+  document.getElementById("level").innerText=level;
+  document.getElementById("score").innerText=score;
+  document.getElementById("coins").innerText=coins;
   createGrid();
   startTimer();
 }
 
+// CREATE GRID
 function createGrid(){
 
-  let data = [
-  ["Gravity?","Newton"],
-  ["Mona Lisa?","Da Vinci"],
-  ["AC Power?","Tesla"],
-  ["Relativity?","Einstein"]
-  ];
+let data=getData(level);
 
-  let cards=[];
-  data.forEach(d=>{
-    cards.push({q:d[0], a:d[1]});
-    cards.push({q:d[0], a:d[1]});
-  });
-
-  cards.sort(()=>0.5-Math.random());
-
-  let grid=document.getElementById("grid");
-  grid.innerHTML="";
-  opened=[];
-  matchCount=0;
-
-  cards.forEach(item=>{
-    let div=document.createElement("div");
-    div.className="card";
-    div.dataset.answer=item.a;
-    div.dataset.question=item.q;
-    div.innerHTML="?";
-
-    div.onclick=()=>flip(div);
-
-    grid.appendChild(div);
-  });
-}
-
-function startTimer(){
-  clearInterval(interval);
-  timer = 20 - level*2;
-  if(timer < 5) timer = 5;
-
-  document.getElementById("timer").innerText = timer;
-
-  interval = setInterval(()=>{
-    timer--;
-    document.getElementById("timer").innerText = timer;
-
-    if(timer===0){
-      clearInterval(interval);
-      alert("⏱ Time’s up!");
-      saveScore();
-      nextLevel();
-    }
-  },1000);
-}
-
-function flip(card){
-  if(opened.length<2 && !card.classList.contains("matched")){
-    card.innerHTML = card.dataset.question || card.dataset.answer;
-    opened.push(card);
-
-    if(opened.length==2){
-      setTimeout(checkMatch,500);
-    }
-  }
-}
-
-function checkMatch(){
-
-  if(opened[0].dataset.answer === opened[1].dataset.answer){
-
-    opened.forEach(c=>c.classList.add("matched"));
-    score += 10;
-    matchCount++;
-
-    document.getElementById("score").innerText = score;
-
-    if(matchCount===4){
-      clearInterval(interval);
-      saveScore();
-      level++;
-      setTimeout(nextLevel,1000);
-    }
-
-  } else {
-    opened.forEach(c=>{
-      c.innerHTML="?";
-    });
-  }
-
-  opened=[];
-}
-
-// SAVE SCORE ONLINE
-function saveScore(){
-  db.ref("players/"+playerName).set({
-    name:playerName,
-    score:score
-  });
-}
-
-// LIVE LEADERBOARD
-db.ref("players").on("value",snapshot=>{
-  let data=snapshot.val();
-  let html="<h3>🏆 Leaderboard</h3>";
-
-  let arr=Object.values(data||{});
-  arr.sort((a,b)=>b.score-a.score);
-
-  arr.forEach(p=>{
-    html += "<p>"+p.name+" - "+p.score+"</p>";
-  });
-
-  document.getElementById("leaderboard").innerHTML = html;
+let cards=[];
+data.forEach(d=>{
+  cards.push({q:d[0],a:d[1]});
+  cards.push({q:d[0],a:d[1]});
 });
+
+cards.sort(()=>0.5-Math.random());
+
+let grid=document.getElementById("grid");
+grid.innerHTML="";
+opened=[];
+matchCount=0;
+
+cards.forEach(item=>{
+  let div=document.createElement("div");
+  div.className="card";
+  div.dataset.answer=item.a;
+  div.dataset.question=item.q;
+  div.innerHTML="?";
+
+  div.onclick=()=>flip(div);
+
+  grid.appendChild(div);
+});
+}
+
+// TIMER
+function startTimer(){
+clearInterval(interval);
+timer=20-level;
+if(timer<5) timer=5;
+
+document.getElementById("timer").innerText=timer;
+
+interval=setInterval(()=>{
+timer--;
+document.getElementById("timer").innerText=timer;
+
+if(timer==0){
+clearInterval(interval);
+alert("Time up!");
+saveScore();
+nextLevel();
+}
+},1000);
+}
+
+// FLIP
+function flip(card){
+if(opened.length<2 && !card.classList.contains("matched")){
+card.innerHTML=card.dataset.question;
+opened.push(card);
+
+if(opened.length==2){
+setTimeout(checkMatch,400);
+}
+}
+}
+
+// MATCH
+function checkMatch(){
+if(opened[0].dataset.answer==opened[1].dataset.answer){
+
+opened.forEach(c=>c.classList.add("matched"));
+score+=10;
+coins+=5;
+matchCount++;
+
+document.getElementById("score").innerText=score;
+document.getElementById("coins").innerText=coins;
+
+if(matchCount==4){
+clearInterval(interval);
+level++;
+
+if(level>10){
+showWinner();
+return;
+}
+
+setTimeout(nextLevel,800);
+}
+
+}else{
+opened.forEach(c=>c.innerHTML="?");
+}
+
+opened=[];
+}
+
+// SAVE SCORE
+function saveScore(){
+db.ref("rooms/"+roomId+"/players/"+playerName).set({
+name:playerName,
+score:score
+});
+}
+
+// LEADERBOARD
+db.ref("rooms/"+roomId+"/players").on("value",snap=>{
+let data=snap.val();
+let html="<h3>🏆 Leaderboard</h3>";
+
+let arr=Object.values(data||{});
+arr.sort((a,b)=>b.score-a.score);
+
+arr.forEach(p=>{
+html+="<p>"+p.name+" - "+p.score+"</p>";
+});
+
+document.getElementById("leaderboard").innerHTML=html;
+});
+
+// WINNER
+function showWinner(){
+db.ref("rooms/"+roomId+"/players").once("value",snap=>{
+let players=Object.values(snap.val()||{});
+players.sort((a,b)=>b.score-a.score);
+let winner=players[0];
+
+alert("🏆 Winner: "+winner.name+" ("+winner.score+")");
+});
+}
 
 </script>
 
