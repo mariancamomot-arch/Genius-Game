@@ -37,6 +37,9 @@ body {
 
 <h1>🌐 Genius Game</h1>
 
+<p>Enter name: <input id="nameInput"></p>
+<button onclick="startGame()">Start Game</button>
+
 <p id="player"></p>
 <p>Score: <span id="score">0</span></p>
 
@@ -44,46 +47,51 @@ body {
 
 <script>
 
-// PLAYER
-let playerName = prompt("Enter your name:");
-if(!playerName) playerName = "Guest";
-
-document.getElementById("player").innerText = "Player: " + playerName;
-
-// SCORE
+let playerName = "";
 let score = 0;
 
-// DATA
-let data = [
-["Relativity","Einstein"],
-["AC Power","Tesla"],
-["Gravity","Newton"],
-["Mona Lisa","Da Vinci"]
-];
+function startGame(){
 
-// CREATE CARDS
-let cards=[];
-data.forEach(d=>{
-  cards.push(d);
-  cards.push(d);
-});
-cards.sort(()=>0.5-Math.random());
+  playerName = document.getElementById("nameInput").value;
+  if(!playerName) playerName = "Player";
 
-// DISPLAY GRID
-let grid=document.getElementById("grid");
+  document.getElementById("player").innerText = "Player: " + playerName;
 
-cards.forEach(item=>{
-  let div=document.createElement("div");
-  div.className="card";
-  div.dataset.name=item[1];
-  div.innerHTML=item[0];
-  div.onclick=()=>flip(div);
-  grid.appendChild(div);
-});
+  startGrid();
+}
+
+function startGrid(){
+
+  let data = [
+  ["Relativity","Einstein"],
+  ["AC Power","Tesla"],
+  ["Gravity","Newton"],
+  ["Mona Lisa","Da Vinci"]
+  ];
+
+  let cards=[];
+  data.forEach(d=>{
+    cards.push(d);
+    cards.push(d);
+  });
+
+  cards.sort(()=>0.5-Math.random());
+
+  let grid=document.getElementById("grid");
+  grid.innerHTML="";
+
+  cards.forEach(item=>{
+    let div=document.createElement("div");
+    div.className="card";
+    div.dataset.name=item[1];
+    div.innerHTML=item[0];
+    div.onclick=()=>flip(div);
+    grid.appendChild(div);
+  });
+}
 
 let opened=[];
 
-// FLIP
 function flip(card){
   if(opened.length<2 && !card.classList.contains("matched")){
     card.innerHTML=card.dataset.name;
@@ -95,7 +103,6 @@ function flip(card){
   }
 }
 
-// CHECK MATCH
 function checkMatch(){
   if(opened[0].dataset.name===opened[1].dataset.name){
     opened.forEach(c=>c.classList.add("matched"));
@@ -103,7 +110,7 @@ function checkMatch(){
     document.getElementById("score").innerText=score;
   } else {
     opened.forEach(c=>{
-      c.innerHTML=data.find(d=>d[1]===c.dataset.name)[0];
+      c.innerHTML=c.innerText;
     });
   }
   opened=[];
