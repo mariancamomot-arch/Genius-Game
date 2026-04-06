@@ -5,32 +5,45 @@
 
 <style>
 body {
-  background:black;
+  background: linear-gradient(to bottom, #000, #222);
   color:white;
   text-align:center;
   font-family:Arial;
 }
+
+h1 { margin-top:10px; }
 
 .grid {
   display:grid;
   grid-template-columns:repeat(4,80px);
   gap:8px;
   justify-content:center;
+  padding:10px;
 }
 
 .card {
   width:80px;
   height:80px;
   background:#111;
+  border-radius:10px;
   display:flex;
   align-items:center;
   justify-content:center;
   cursor:pointer;
   font-size:12px;
   padding:5px;
+  transition:0.3s;
 }
 
+.card:hover { background:#333; }
 .matched { background:green; }
+
+.panel {
+  background:#111;
+  padding:10px;
+  margin:10px;
+  border-radius:10px;
+}
 </style>
 
 </head>
@@ -39,15 +52,26 @@ body {
 
 <h1>🧠 Genius Game</h1>
 
-<p>Enter name: <input id="nameInput"></p>
-<button onclick="startGame()">Start Game</button>
+<div class="panel">
+  <input id="nameInput" placeholder="Enter name">
+  <button onclick="startGame()">Start</button>
+</div>
 
-<p id="player"></p>
-<p>Score: <span id="score">0</span></p>
+<div class="panel">
+  <p id="player"></p>
+  <p>Level: <span id="level">1</span></p>
+  <p>Score: <span id="score">0</span></p>
+  <p>Time: <span id="timer">20</span></p>
+</div>
 
 <div class="grid" id="grid"></div>
 
 <h2 id="winMessage"></h2>
+
+<!-- SOUND -->
+<audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="matchSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
+<audio id="wrongSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
 
 <script>
 
@@ -55,6 +79,13 @@ let playerName = "";
 let score = 0;
 let opened = [];
 let matchCount = 0;
+let level = 1;
+let timer = 20;
+let interval;
+
+let clickS = document.getElementById("clickSound");
+let matchS = document.getElementById("matchSound");
+let wrongS = document.getElementById("wrongSound");
 
 function startGame(){
 
@@ -63,16 +94,29 @@ function startGame(){
 
   document.getElementById("player").innerText = "Player: " + playerName;
 
+  level = 1;
+  score = 0;
+
+  nextLevel();
+}
+
+function nextLevel(){
+
+  document.getElementById("level").innerText = level;
+  document.getElementById("score").innerText = score;
+  document.getElementById("winMessage").innerText = "";
+
   createGrid();
+  startTimer();
 }
 
 function createGrid(){
 
   let data = [
-  ["Who discovered gravity?","Newton"],
-  ["Who painted Mona Lisa?","Da Vinci"],
-  ["Who created AC Power?","Tesla"],
-  ["Who made Relativity?","Einstein"]
+  ["Gravity?","Newton"],
+  ["Mona Lisa?","Da Vinci"],
+  ["AC Power?","Tesla"],
+  ["Relativity?","Einstein"]
   ];
 
   let cards=[];
@@ -87,9 +131,6 @@ function createGrid(){
   grid.innerHTML="";
   opened=[];
   matchCount = 0;
-  score = 0;
-  document.getElementById("score").innerText = score;
-  document.getElementById("winMessage").innerText = "";
 
   cards.forEach(item=>{
     let div=document.createElement("div");
@@ -104,11 +145,31 @@ function createGrid(){
   });
 }
 
+function startTimer(){
+  clearInterval(interval);
+  timer = 20 - level*2;
+  if(timer < 5) timer = 5;
+
+  document.getElementById("timer").innerText = timer;
+
+  interval = setInterval(()=>{
+    timer--;
+    document.getElementById("timer").innerText = timer;
+
+    if(timer === 0){
+      clearInterval(interval);
+      alert("⏱ Time’s up!");
+      nextLevel();
+    }
+  },1000);
+}
+
 function flip(card){
   if(opened.length<2 && !card.classList.contains("matched")){
 
-    card.innerHTML = card.dataset.question || card.dataset.answer;
+    clickS.play();
 
+    card.innerHTML = card.dataset.question || card.dataset.answer;
     opened.push(card);
 
     if(opened.length==2){
@@ -121,6 +182,8 @@ function checkMatch(){
 
   if(opened[0].dataset.answer === opened[1].dataset.answer){
 
+    matchS.play();
+
     opened.forEach(c=>c.classList.add("matched"));
     score += 10;
     matchCount++;
@@ -128,10 +191,16 @@ function checkMatch(){
     document.getElementById("score").innerText = score;
 
     if(matchCount === 4){
-      document.getElementById("winMessage").innerText = "🏆 You Win Genius!";
+      clearInterval(interval);
+      level++;
+      document.getElementById("winMessage").innerText = "🏆 Level Up!";
+      setTimeout(nextLevel,1000);
     }
 
   } else {
+
+    wrongS.play();
+
     opened.forEach(c=>{
       c.innerHTML="?";
     });
