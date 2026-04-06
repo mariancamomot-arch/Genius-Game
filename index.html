@@ -26,6 +26,8 @@ body {
   align-items:center;
   justify-content:center;
   cursor:pointer;
+  font-size:12px;
+  padding:5px;
 }
 
 .matched { background:green; }
@@ -35,7 +37,7 @@ body {
 
 <body>
 
-<h1>🌐 Genius Game</h1>
+<h1>🧠 Genius Game</h1>
 
 <p>Enter name: <input id="nameInput"></p>
 <button onclick="startGame()">Start Game</button>
@@ -45,10 +47,14 @@ body {
 
 <div class="grid" id="grid"></div>
 
+<h2 id="winMessage"></h2>
+
 <script>
 
 let playerName = "";
 let score = 0;
+let opened = [];
+let matchCount = 0;
 
 function startGame(){
 
@@ -57,62 +63,80 @@ function startGame(){
 
   document.getElementById("player").innerText = "Player: " + playerName;
 
-  startGrid();
+  createGrid();
 }
 
-function startGrid(){
+function createGrid(){
 
   let data = [
-  ["Relativity","Einstein"],
-  ["AC Power","Tesla"],
-  ["Gravity","Newton"],
-  ["Mona Lisa","Da Vinci"]
+  ["Who discovered gravity?","Newton"],
+  ["Who painted Mona Lisa?","Da Vinci"],
+  ["Who created AC Power?","Tesla"],
+  ["Who made Relativity?","Einstein"]
   ];
 
   let cards=[];
   data.forEach(d=>{
-    cards.push(d);
-    cards.push(d);
+    cards.push({q:d[0], a:d[1]});
+    cards.push({q:d[0], a:d[1]});
   });
 
   cards.sort(()=>0.5-Math.random());
 
   let grid=document.getElementById("grid");
   grid.innerHTML="";
+  opened=[];
+  matchCount = 0;
+  score = 0;
+  document.getElementById("score").innerText = score;
+  document.getElementById("winMessage").innerText = "";
 
   cards.forEach(item=>{
     let div=document.createElement("div");
     div.className="card";
-    div.dataset.name=item[1];
-    div.innerHTML=item[0];
+    div.dataset.answer=item.a;
+    div.dataset.question=item.q;
+    div.innerHTML="?";
+
     div.onclick=()=>flip(div);
+
     grid.appendChild(div);
   });
 }
 
-let opened=[];
-
 function flip(card){
   if(opened.length<2 && !card.classList.contains("matched")){
-    card.innerHTML=card.dataset.name;
+
+    card.innerHTML = card.dataset.question || card.dataset.answer;
+
     opened.push(card);
 
     if(opened.length==2){
-      setTimeout(checkMatch,400);
+      setTimeout(checkMatch,500);
     }
   }
 }
 
 function checkMatch(){
-  if(opened[0].dataset.name===opened[1].dataset.name){
+
+  if(opened[0].dataset.answer === opened[1].dataset.answer){
+
     opened.forEach(c=>c.classList.add("matched"));
-    score+=10;
-    document.getElementById("score").innerText=score;
+    score += 10;
+    matchCount++;
+
+    document.getElementById("score").innerText = score;
+
+    if(matchCount === 4){
+      document.getElementById("winMessage").innerText = "🏆 You Win Genius!";
+    }
+
   } else {
     opened.forEach(c=>{
-      c.innerHTML=c.innerText;
+      c.innerHTML="?";
     });
   }
+
   opened=[];
 }
 
