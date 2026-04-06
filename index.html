@@ -1,7 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Genius Multiplayer</title>
+<title>Genius Game</title>
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-3893ZHGBMH"></script>
+<script>
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-3893ZHGBMH');
+</script>
 
 <style>
 body {
@@ -37,7 +46,7 @@ body {
 
 <body>
 
-<h1>🌐 Genius Multiplayer</h1>
+<h1>🌐 Genius Game</h1>
 
 <p id="player"></p>
 <p>Score: <span id="score">0</span></p>
@@ -52,7 +61,7 @@ body {
 
 <script>
 
-// ✅ FIREBASE CONFIG (ALREADY FIXED)
+// FIREBASE CONFIG
 var firebaseConfig = {
   apiKey: "AIzaSyD7Yt4xJWstWZqZQrK89G3JQZjIgk9dNV8",
   authDomain: "marne-genius-game.firebaseapp.com",
@@ -73,7 +82,7 @@ document.getElementById("player").innerText = "Player: " + playerName;
 // SCORE
 let score = 0;
 
-// DATA (GENIUS CLUES)
+// DATA
 let data = [
 ["Relativity","Einstein"],
 ["AC Power","Tesla"],
@@ -103,7 +112,7 @@ cards.forEach(item=>{
 
 let opened=[];
 
-// FLIP FUNCTION
+// FLIP
 function flip(card){
   if(opened.length<2 && !card.classList.contains("matched")){
     card.innerHTML=card.dataset.name;
@@ -126,11 +135,10 @@ function checkMatch(){
       c.innerHTML=data.find(d=>d[1]===c.dataset.name)[0];
     });
   }
-
   opened=[];
 }
 
-// UPDATE SCORE TO FIREBASE
+// UPDATE SCORE
 function updateScore(){
   document.getElementById("score").innerText=score;
 
@@ -140,10 +148,9 @@ function updateScore(){
   });
 }
 
-// LIVE LEADERBOARD
+// LEADERBOARD
 db.ref("players").on("value",snapshot=>{
   let data=snapshot.val();
-
   let html="<h2>🏆 Live Leaderboard</h2>";
 
   let arr=Object.values(data||{});
