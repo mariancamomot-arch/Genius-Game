@@ -66,23 +66,29 @@ body {
 
 <div class="panel" id="leaderboard"></div>
 
+<!-- SOUND -->
+<audio id="clickSound" src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3"></audio>
+<audio id="matchSound" src="https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3"></audio>
+<audio id="wrongSound" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3"></audio>
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
 
-// FIREBASE
+// 🔥 PUT YOUR REAL FIREBASE CONFIG HERE
 var firebaseConfig = {
-  apiKey: "AIzaSy...",
+  apiKey: "YOUR_KEY",
   authDomain: "marne-genius-game.firebaseapp.com",
   databaseURL: "https://marne-genius-game-default-rtdb.firebaseio.com",
-  projectId: "marne-genius-game",
+  projectId: "marne-genius-game"
 };
+
 firebase.initializeApp(firebaseConfig);
 let db = firebase.database();
 
-// GAME VARIABLES
+// VARIABLES
 let playerName="";
 let score=0;
 let coins=0;
@@ -93,11 +99,14 @@ let timer=20;
 let interval;
 let roomId="room1";
 
-// JOIN GAME
-function joinGame(){
-  playerName = document.getElementById("nameInput").value || "Player";
+let clickS=document.getElementById("clickSound");
+let matchS=document.getElementById("matchSound");
+let wrongS=document.getElementById("wrongSound");
 
-  document.getElementById("player").innerText = "Player: " + playerName;
+// JOIN
+function joinGame(){
+  playerName=document.getElementById("nameInput").value||"Player";
+  document.getElementById("player").innerText="Player: "+playerName;
 
   db.ref("rooms/"+roomId+"/players/"+playerName).set({
     name:playerName,
@@ -107,7 +116,7 @@ function joinGame(){
   startGame();
 }
 
-// START GAME
+// START
 function startGame(){
   score=0;
   coins=0;
@@ -115,7 +124,7 @@ function startGame(){
   nextLevel();
 }
 
-// LEVEL SYSTEM
+// LEVEL DATA
 function getData(level){
 
 if(level<5){
@@ -163,7 +172,7 @@ function nextLevel(){
   startTimer();
 }
 
-// CREATE GRID
+// GRID
 function createGrid(){
 
 let data=getData(level);
@@ -208,7 +217,7 @@ document.getElementById("timer").innerText=timer;
 
 if(timer==0){
 clearInterval(interval);
-alert("Time up!");
+alert("⏱ Time up!");
 saveScore();
 nextLevel();
 }
@@ -218,6 +227,9 @@ nextLevel();
 // FLIP
 function flip(card){
 if(opened.length<2 && !card.classList.contains("matched")){
+
+clickS.play();
+
 card.innerHTML=card.dataset.question;
 opened.push(card);
 
@@ -229,7 +241,10 @@ setTimeout(checkMatch,400);
 
 // MATCH
 function checkMatch(){
+
 if(opened[0].dataset.answer==opened[1].dataset.answer){
+
+matchS.play();
 
 opened.forEach(c=>c.classList.add("matched"));
 score+=10;
@@ -252,6 +267,9 @@ setTimeout(nextLevel,800);
 }
 
 }else{
+
+wrongS.play();
+
 opened.forEach(c=>c.innerHTML="?");
 }
 
