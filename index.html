@@ -79,7 +79,7 @@ body {
 
 // 🔥 PUT YOUR REAL FIREBASE CONFIG HERE
 var firebaseConfig = {
-  apiKey: "YOUR_KEY",
+  apiKey: "YOUR_API_KEY",
   authDomain: "marne-genius-game.firebaseapp.com",
   databaseURL: "https://marne-genius-game-default-rtdb.firebaseio.com",
   projectId: "marne-genius-game"
@@ -103,7 +103,7 @@ let clickS=document.getElementById("clickSound");
 let matchS=document.getElementById("matchSound");
 let wrongS=document.getElementById("wrongSound");
 
-// JOIN
+// JOIN GAME
 function joinGame(){
   playerName=document.getElementById("nameInput").value||"Player";
   document.getElementById("player").innerText="Player: "+playerName;
@@ -116,7 +116,7 @@ function joinGame(){
   startGame();
 }
 
-// START
+// START GAME
 function startGame(){
   score=0;
   coins=0;
@@ -154,6 +154,15 @@ return [
 ];
 }
 
+if(level<50){
+return [
+["Largest planet?","Jupiter"],
+["Fastest animal?","Cheetah"],
+["Red planet?","Mars"],
+["Ocean largest?","Pacific"]
+];
+}
+
 return [
 ["Brain","Mind"],
 ["Focus","Win"],
@@ -172,7 +181,7 @@ function nextLevel(){
   startTimer();
 }
 
-// GRID
+// CREATE GRID
 function createGrid(){
 
 let data=getData(level);
@@ -239,7 +248,7 @@ setTimeout(checkMatch,400);
 }
 }
 
-// MATCH
+// CHECK MATCH
 function checkMatch(){
 
 if(opened[0].dataset.answer==opened[1].dataset.answer){
@@ -258,7 +267,7 @@ if(matchCount==4){
 clearInterval(interval);
 level++;
 
-if(level>10){
+if(level>100){
 showWinner();
 return;
 }
